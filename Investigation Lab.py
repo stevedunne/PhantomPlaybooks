@@ -245,6 +245,19 @@ def Filter_Banned_Countries(action=None, success=None, container=None, results=N
     if matched_artifacts_1 or matched_results_1:
         decision_1(action=action, success=success, container=container, results=results, handle=handle, filtered_artifacts=matched_artifacts_1, filtered_results=matched_results_1)
 
+    # collect filtered artifact ids for 'if' condition 2
+    matched_artifacts_2, matched_results_2 = phantom.condition(
+        container=container,
+        action_results=results,
+        conditions=[
+            ["geolocate_ip_1:action_result.data.*.country_name", "not in", "custom_list:Banned Countries"],
+        ],
+        name="Filter_Banned_Countries:condition_2")
+
+    # call connected blocks if filtered artifacts or results
+    if matched_artifacts_2 or matched_results_2:
+        pin_6(action=action, success=success, container=container, results=results, handle=handle, filtered_artifacts=matched_artifacts_2, filtered_results=matched_results_2)
+
     return
 
 def join_Filter_Banned_Countries(action=None, success=None, container=None, results=None, handle=None, filtered_artifacts=None, filtered_results=None):
@@ -256,6 +269,17 @@ def join_Filter_Banned_Countries(action=None, success=None, container=None, resu
         # call connected block "Filter_Banned_Countries"
         Filter_Banned_Countries(container=container, handle=handle)
     
+    return
+
+def pin_6(action=None, success=None, container=None, results=None, handle=None, filtered_artifacts=None, filtered_results=None):
+    phantom.debug('pin_6() called')
+
+    results_data_1 = phantom.collect2(container=container, datapath=['geolocate_ip_1:action_result.data.*.country_name'], action_results=results)
+
+    results_item_1_0 = [item[0] for item in results_data_1]
+
+    phantom.pin(container=container, data=results_item_1_0, message="Origin Country is not a thread", pin_type="card", pin_style="grey", name=None)
+
     return
 
 def on_finish(container, summary):
